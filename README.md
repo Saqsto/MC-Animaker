@@ -4,7 +4,17 @@
 [![Blender Version](https://img.shields.io/badge/Blender-4.2+-orange.svg)](https://www.blender.org/download/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-**MC Animaker** is an all-in-one Blender toolkit for creating advanced Minecraft animations. Animate blocks and entities with the full power of Blender tools and export them directly to a ready-to-use Minecraft datapack. It supports Block Displays, Entity Positioning, Entity Tracking(for camera setups), Custom Commands, and NBT Data",
+> MC Animaker is the definitive tool for map makers, content creators, and animators who want to push the boundaries of what's possible in Minecraft.
+
+> The addon can be used to create extremely advanced Minecraft animations. Animate blocks and entities with the full power of Blender tools and export them directly to a ready-to-use Minecraft datapack. It supports Block Displays, Entity Positioning, Entity Tracking(for camera setups), Custom Commands, and NBT Data.
+
+# Key Features:
+
+- 1:1 Blender to Minecraft Animation: What you see in the Blender viewport is exactly what you get in-game. Animate with confidence thanks to a perfectly synchronized coordinate system.
+
+- Advanced Datapack Controls: Automatically generates a robust datapack with intuitive functions to play, pause, resume, loop, and stop your animation.
+
+- Resource Pack Integration: Simply point to your resource pack, and MC Animaker will automatically find and apply the correct textures to your blocks in the Blender viewport, including directional and animated textures like furnaces and command blocks. It was designed to work perfectly with "VanillaDefault 1.21.7" and similar resource packs.
  
 ---
 
@@ -12,6 +22,8 @@
 
 Check out this video to get a tast of what MC Animaker can do:
 [![MC Animaker Showcase](https://img.youtube.com/vi/C-nmq5UASCU/maxresdefault.jpg)]([https://youtu.be/yUUkNl-F2ZI](https://www.youtube.com/watch?v=C-nmq5UASCU))
+
+
 
 ## 📦 Installation
 
