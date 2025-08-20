@@ -11,7 +11,7 @@
 ## Showcase
 
 Check out this video to get a tast of what MC Animaker can do:
-[![MC Animaker Showcase](https://img.youtube.com/vi/yUUkNl-F2ZI/maxresdefault.jpg)](https://youtu.be/yUUkNl-F2ZI)
+[![MC Animaker Showcase](https://img.youtube.com/vi/C-nmq5UASCU/maxresdefault.jpg)]([https://youtu.be/yUUkNl-F2ZI](https://www.youtube.com/watch?v=C-nmq5UASCU))
 
 ## 📦 Installation
 
