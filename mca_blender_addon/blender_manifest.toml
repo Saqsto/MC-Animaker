@@ -14,6 +14,10 @@ tagline = "Bring your Blender animations to life in Minecraft"
 description = "A tool that converts your Blender animations directly into playable Minecraft datapacks"
 
 license = ["SPDX:GPL-3.0-or-later"]
-tags = ["Animation"]
+tags = ["Import-Export", "Animation"]
+
+
+[permissions]
+files = "Import Resource Pack from disk and export Minecraft Datapack files to disk"
 
 website = "https://priqnot.gumroad.com/l/mc-animaker"
