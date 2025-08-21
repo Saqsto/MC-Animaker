@@ -1,10 +1,10 @@
 bl_info = {
     "name": "MC Animaker",
     "author": "Priqnot",
-    "version": (1, 0, 0),
-    "blender": (4, 2, 12),
+    "version": (1, 1, 0),
+    "blender": (2, 83, 20),
     "location": "View3D > Sidebar > MC Animaker",
-    "description": "An all-in-one Blender toolkit for creating advanced Minecraft animations. Animate blocks and entities with the full power of Blender tools and export them directly to a ready-to-use Minecraft datapack. It supports Block Displays, Entity Positioning, Entity Tracking(for camera setups), Custom Commands, and NBT Data",
+    "description": "Minecraft datapack toolkit. Converts your animations to Minecraft.",
     "category": "MC Animaker",
 }
 

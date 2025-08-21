@@ -11,7 +11,7 @@ import math
 watermark = "# Created using MC Animaker by Priqnot\n\n"
 
 def sanitize_name(name_str):
-    if not name_str: return "no_name"
+    if not name_str: return "unnamed"
     sanitized = name_str.lower()
     sanitized = re.sub(r'[^a-z0-9_.-]', '_', sanitized)
     return sanitized
@@ -160,7 +160,7 @@ class ResourcePackHelper:
             first_key = next(iter(variants)); model_info = variants[first_key]
             if isinstance(model_info, list): model_info = model_info[0]
             model_id = model_info.get('model')
-        if not model_id: return None, "Couldn't determine model. Using fallback."
+        if not model_id: return None, "Could not determine model. Using fallback."
         resolved_textures = self.resolve_model_textures(rp_path, model_id)
         final_textures = {}
         for key, value in resolved_textures.items():

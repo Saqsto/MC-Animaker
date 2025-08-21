@@ -44,7 +44,6 @@ class MC_ObjectProperties(PropertyGroup):
         default='NONE',
         description="Choose the object's function for the datapack. 'Not Set' will be ignored."
     )
-
     block_id: StringProperty(name="Block ID", default="minecraft:oak_log")
     entity_id: StringProperty(name="Entity ID", default="minecraft:allay")
     block_light_level: IntProperty(name="Block Light", default=0, min=0, max=15, update=update_multi_object_value)
@@ -60,6 +59,27 @@ class MC_ObjectProperties(PropertyGroup):
     custom_nbt: StringProperty(name="Custom NBT Data", default="NoAI:true,NoGravity:true,Invulnerable:true")
 
 class MC_SceneProperties(PropertyGroup):
+    export_type: EnumProperty(
+        name="Export Type",
+        items=[('ANIMATION', "Animation", "Export a full animation sequence"),
+               ('MODEL', "Model", "Export a single static model from a specific frame")],
+        default='ANIMATION'
+    )
+    
+    minecraft_version: EnumProperty(
+        name="Version",
+        items=[('1.21', "1.21+", "pack_format 34+"),
+               ('1.20.5', "1.20.5 - 1.20.6", "pack_format 32"),
+               ('1.20.3', "1.20.3 - 1.20.4", "pack_format 26"),
+               ('1.20.2', "1.20.2", "pack_format 18"),
+               ('1.20', "1.20 - 1.20.1", "pack_format 15"),
+               ('1.19.4', "1.19.4", "pack_format 12")],
+        default='1.21',
+        description="Select the target Minecraft version to ensure datapack compatibility"
+    )
+
+    model_export_frame: IntProperty(name="Frame", default=1, min=0, description="The timeline frame to export as a static model")
+    
     add_block_id: StringProperty(name="", default="minecraft:oak_log")
     add_entity_id: StringProperty(name="", default="minecraft:allay")
     resource_pack_path: StringProperty(name="Resource Pack Path", subtype='FILE_PATH')
@@ -75,7 +95,7 @@ class MC_SceneProperties(PropertyGroup):
     start_interpolation: IntProperty(name="Start (ticks)", default=0, min=0)
     invert_normals_on_export: BoolProperty(name="Invert Normals on Export", default=False)
     dynamic_tracking: BoolProperty(name="Dynamic Tracking", default=False)
-    tracking_mode: EnumProperty(name="Mode", items=[('CENTER', "Center", ""), ('PLAYER', "Player", ""), ('TARGET', "Target", "")], default='CENTER')
+    tracking_mode: EnumProperty(name="Mode", items=[('OFF', "Off", ""), ('CENTER', "Center", ""), ('PLAYER', "Player", ""), ('TARGET', "Target", "")], default='OFF')
     global_tracking_anchor: EnumProperty(name="Anchor", items=[('EYES', "Eyes", ""), ('FEET', "Feet", ""), ('INDIVIDUAL', "Individual", "")], default='EYES')
     use_custom_frame_range: BoolProperty(name="Use Custom Frame Range", default=False)
     start_frame: IntProperty(name="Start Frame", default=1)

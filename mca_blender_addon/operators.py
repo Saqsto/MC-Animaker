@@ -150,9 +150,39 @@ class MC_OT_ApplyTextures(Operator):
             
             img = bpy.data.images.load(image_filepath, check_existing=True); img.pack()
             mat_name = os.path.basename(path); mat = bpy.data.materials.new(name=mat_name); mat.use_nodes = True
-            bsdf = mat.node_tree.nodes.get('Principled BSDF'); tex_image_node = mat.node_tree.nodes.new('ShaderNodeTexImage')
-            tex_image_node.image = img; tex_image_node.interpolation = 'Closest'; mat.node_tree.links.new(bsdf.inputs['Base Color'], tex_image_node.outputs['Color'])
-            mat.node_tree.links.new(bsdf.inputs['Alpha'], tex_image_node.outputs['Alpha']); mat.blend_method = 'CLIP'
+            bsdf = mat.node_tree.nodes.get('Principled BSDF')
+            
+            if bsdf:
+                base_pos_x, base_pos_y = bsdf.location
+            else:
+                base_pos_x, base_pos_y = 0, 0
+
+            tex_image_node = mat.node_tree.nodes.new('ShaderNodeTexImage')
+            tex_image_node.location = (base_pos_x - 300, base_pos_y)
+            
+            mapping_node = mat.node_tree.nodes.new('ShaderNodeMapping')
+            mapping_node.location = (base_pos_x - 550, base_pos_y)
+
+            tex_coord_node = mat.node_tree.nodes.new('ShaderNodeTexCoord')
+            tex_coord_node.location = (base_pos_x - 800, base_pos_y)
+            
+            tex_image_node.image = img
+            tex_image_node.interpolation = 'Closest'
+
+            img_width = img.size[0]
+            img_height = img.size[1]
+
+            if img_height > 0:
+                scale_y = img_width / img_height
+                mapping_node.inputs['Scale'].default_value[1] = scale_y
+                mapping_node.inputs['Location'].default_value[1] = 1.0 - scale_y
+            
+            mat.node_tree.links.new(mapping_node.inputs['Vector'], tex_coord_node.outputs['UV'])
+            mat.node_tree.links.new(tex_image_node.inputs['Vector'], mapping_node.outputs['Vector'])
+            
+            mat.node_tree.links.new(bsdf.inputs['Base Color'], tex_image_node.outputs['Color'])
+            mat.node_tree.links.new(bsdf.inputs['Alpha'], tex_image_node.outputs['Alpha'])
+            mat.blend_method = 'CLIP'
             obj.data.materials.append(mat)
             created_materials[path_key] = mat
 
@@ -172,50 +202,56 @@ class MC_OT_ApplyTextures(Operator):
 
 class MC_OT_GenerateDatapack(Operator):
     bl_idname = "mc.generate_datapack"; bl_label = "Generate Datapack"; bl_options = {'REGISTER', 'UNDO'}
+    
     def execute(self, context):
-        props = context.scene.mc_scene_props; scene = context.scene
-        wm = context.window_manager
+        props = context.scene.mc_scene_props
+        if props.export_type == 'ANIMATION':
+            self.execute_animation(context)
+        elif props.export_type == 'MODEL':
+            self.execute_model(context)
+        return {'FINISHED'}
+
+    def execute_animation(self, context):
+        props = context.scene.mc_scene_props; scene = context.scene; wm = context.window_manager
         if not props.datapack_output_path or not props.folder_name or not props.scene_name:
-            self.report({'ERROR'}, "Please set the Output Path, Folder Name, and Scene Name."); return {'CANCELLED'}
-        folder_name = props.folder_name; scene_name = utils.sanitize_name(props.scene_name); ns = utils.sanitize_name(props.namespace)
-        datapack_root = os.path.join(props.datapack_output_path, folder_name)
-        base_path = os.path.join(datapack_root, "data", ns, "function", "animations")
-        scenes_path = os.path.join(base_path, "scenes", scene_name)
-        blocks_path = os.path.join(scenes_path, "keyframes", "blocks")
-        entity_path = os.path.join(scenes_path, "keyframes", "entity")
-        commands_path = os.path.join(entity_path, "commands")
-        main_path = os.path.join(base_path, "_main", scene_name)
-        for path in [blocks_path, entity_path, main_path, commands_path]:
-            if not os.path.exists(path): os.makedirs(path)
-        pack_mcmeta = {"pack": {"pack_format": 15, "description": f"§c§l{folder_name} \n§7Created using §6§lMC Animaker"}}
+            self.report({'ERROR'}, "Please set the Output Path, Folder Name, and Scene Name."); return
+        
+        version_details = generator.VERSION_MAP.get(props.minecraft_version, generator.VERSION_MAP['1.21'])
+        pack_format = version_details['pack_format']; function_folder_name = version_details['function_folder']
+        ns = utils.sanitize_name(props.namespace); scene_name = utils.sanitize_name(props.scene_name)
+        datapack_root = os.path.join(props.datapack_output_path, props.folder_name)
+        base_path = os.path.join(datapack_root, "data", ns, function_folder_name)
+        scenes_path = os.path.join(base_path, "animations", "scenes", scene_name)
+        for path in [scenes_path, os.path.join(scenes_path, "keyframes", "blocks"), os.path.join(scenes_path, "keyframes", "entity", "commands"), os.path.join(base_path, "animations", "_main", scene_name)]:
+            os.makedirs(path, exist_ok=True)
+        
+        pack_mcmeta = {"pack": {"pack_format": pack_format, "description": f"Animation '{props.scene_name}' generated by MC Animaker"}}
         with open(os.path.join(datapack_root, "pack.mcmeta"), 'w', encoding='utf-8') as f: json.dump(pack_mcmeta, f, indent=4)
-        all_objects = [obj for obj in bpy.data.objects if hasattr(obj, 'mc_props') and obj.mc_props.object_type in ['BLOCK', 'ENTITY']]
-        if not all_objects:
-            self.report({'WARNING'}, "No MC Animaker objects found to animate."); return {'CANCELLED'}
+        
+        all_objects = [obj for obj in bpy.data.objects if hasattr(obj, 'mc_props') and obj.mc_props.object_type != 'NONE']
+        if not all_objects: self.report({'WARNING'}, "No MC Animaker objects found to animate."); return
+        
         start_frame = scene.frame_start if not props.use_custom_frame_range else props.start_frame
         end_frame = scene.frame_end if not props.use_custom_frame_range else props.end_frame
-        context.window.cursor_set('WAIT')
-        wm.mca_progress = 0.0
-        wm.mca_progress_text = "Caching Animation Data..."
+        
+        context.window.cursor_set('WAIT'); wm.mca_progress = 0.0; wm.mca_progress_text = "Caching Animation Data..."
         animation_cache = {obj.name: {} for obj in all_objects}
-        original_frame = scene.frame_current
-        total_frames = end_frame - start_frame + 1
+        original_frame = scene.frame_current; total_frames = end_frame - start_frame + 1
+        
         try:
             for i, frame in enumerate(range(start_frame, end_frame + 1)):
                 scene.frame_set(frame)
                 for obj in all_objects:
-                    state_tuple = (
-                        obj.matrix_world.copy(), obj.mc_props.solidify,
-                        obj.mc_props.block_light_level, obj.mc_props.sky_light_level
-                    )
+                    state_tuple = (obj.matrix_world.copy(), obj.mc_props.solidify, obj.mc_props.block_light_level, obj.mc_props.sky_light_level)
                     animation_cache[obj.name][frame] = state_tuple
                 wm.mca_progress = (i + 1) / total_frames * 100.0
         finally:
-            scene.frame_set(original_frame)
-            wm.mca_progress = 0.0
-            wm.mca_progress_text = ""
-            context.window.cursor_set('DEFAULT')
+            scene.frame_set(original_frame); wm.mca_progress = 0.0; wm.mca_progress_text = ""; context.window.cursor_set('DEFAULT')
+
         self.report({'INFO'}, "Cache created. Generating files...")
+        
+        main_path = os.path.join(base_path, "animations", "_main", scene_name)
+        
         block_kfs = {}; entity_kfs = {}
         if props.export_blocks:
             block_kfs = generator.get_optimized_keyframes(props, all_objects, 'BLOCK', animation_cache, utils.are_states_equal, start_frame, end_frame)
@@ -223,24 +259,50 @@ class MC_OT_GenerateDatapack(Operator):
             entity_objects = [obj for obj in all_objects if obj.mc_props.object_type == 'ENTITY']
             if entity_objects:
                 entity_kfs = {f: {} for f in range(start_frame, end_frame + 1)}
-                for frame, data in entity_kfs.items():
+                for frame in entity_kfs.keys():
                     frame_data = {}
                     for local_index, obj in enumerate(entity_objects):
                          frame_data[local_index] = (obj, animation_cache[obj.name][frame])
                     entity_kfs[frame] = frame_data
+        
         generator.generate_main_functions(props, main_path, scene_name, ns, all_objects, start_frame, block_kfs, entity_kfs)
         generator.generate_create_commands(props, main_path, scene_name, all_objects, start_frame, animation_cache)
+
         sid_map = {}; used_sids = set()
         for obj in all_objects:
-            mc_props = obj.mc_props
-            if mc_props.object_type == 'ENTITY' and mc_props.use_custom_commands and mc_props.sid:
-                base_sid = utils.sanitize_name(mc_props.sid); final_sid = base_sid; count = 1
+            if obj.mc_props.object_type == 'ENTITY' and obj.mc_props.use_custom_commands and obj.mc_props.sid:
+                base_sid = utils.sanitize_name(obj.mc_props.sid); final_sid = base_sid; count = 1
                 while final_sid in used_sids: final_sid = f"{base_sid}_{count}"; count += 1
                 used_sids.add(final_sid); sid_map[obj] = final_sid
-        generator.generate_custom_command_files(props, commands_path, scene_name, ns, all_objects, sid_map)
+        
+        kf_base_path = os.path.join(scenes_path, "keyframes")
+        generator.generate_custom_command_files(props, os.path.join(kf_base_path, "entity", "commands"), scene_name, ns, all_objects, sid_map)
         if props.export_blocks and block_kfs:
-            generator.generate_keyframes(props, blocks_path, scene_name, ns, all_objects, 'BLOCK', generator.format_block_command, block_kfs, start_frame, end_frame, animation_cache, sid_map)
+            generator.generate_keyframes(props, os.path.join(kf_base_path, "blocks"), scene_name, ns, all_objects, 'BLOCK', generator.format_block_command, block_kfs, start_frame, end_frame, animation_cache, sid_map)
         if props.export_entities and entity_kfs:
-            generator.generate_keyframes(props, entity_path, scene_name, ns, all_objects, 'ENTITY', generator.format_entity_command, entity_kfs, start_frame, end_frame, animation_cache, sid_map)
-        self.report({'INFO'}, f"Datapack '{folder_name}' generated successfully!")
-        return {'FINISHED'}
+            generator.generate_keyframes(props, os.path.join(kf_base_path, "entity"), scene_name, ns, all_objects, 'ENTITY', generator.format_entity_command, entity_kfs, start_frame, end_frame, animation_cache, sid_map)
+            
+        self.report({'INFO'}, f"Datapack '{props.folder_name}' generated successfully!")
+
+    def execute_model(self, context):
+        props = context.scene.mc_scene_props
+        if not props.datapack_output_path or not props.folder_name or not props.scene_name:
+            self.report({'ERROR'}, "Please set the Output Path, Folder Name, and Model Name."); return
+
+        version_details = generator.VERSION_MAP.get(props.minecraft_version, generator.VERSION_MAP['1.21'])
+        pack_format = version_details['pack_format']; function_folder_name = version_details['function_folder']
+        ns = utils.sanitize_name(props.namespace); model_name = utils.sanitize_name(props.scene_name)
+        datapack_root = os.path.join(props.datapack_output_path, props.folder_name)
+        model_base_path = os.path.join(datapack_root, "data", ns, function_folder_name, "models")
+        os.makedirs(model_base_path, exist_ok=True)
+
+        pack_mcmeta = {"pack": {"pack_format": pack_format, "description": f"Model '{props.scene_name}' generated by MC Animaker"}}
+        with open(os.path.join(datapack_root, "pack.mcmeta"), 'w', encoding='utf-8') as f: json.dump(pack_mcmeta, f, indent=4)
+        
+        all_objects = [obj for obj in bpy.data.objects if hasattr(obj, 'mc_props') and obj.mc_props.object_type != 'NONE']
+        if not all_objects:
+            self.report({'WARNING'}, "No MC Animaker objects found to export."); return
+            
+        generator.generate_model_files(context, props, model_base_path, model_name, all_objects)
+        
+        self.report({'INFO'}, f"Model '{model_name}' generated successfully!")

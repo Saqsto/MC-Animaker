@@ -1,0 +1,19 @@
+# blender_manifest.toml
+schema_version = "1.0.0"
+type = "add-on"
+
+id = "mc_animaker"
+name = "MC Animaker"
+author = "Priqnot"
+maintainer = "Priqnot"
+version = "1.1.0"
+blender_version_min = "2.83.20"
+
+
+tagline = "Bring your Blender animations to life in Minecraft"
+description = "A tool that converts your Blender animations directly into playable Minecraft datapacks"
+
+license = ["SPDX:GPL-3.0-or-later"]
+tags = ["Animation"]
+
+website = "https://priqnot.gumroad.com/l/mc-animaker"
