@@ -1,4 +1,5 @@
 # blender_manifest.toml
+
 schema_version = "1.0.0"
 type = "add-on"
 
@@ -7,8 +8,7 @@ name = "MC Animaker"
 author = "Priqnot"
 maintainer = "Priqnot"
 version = "1.1.0"
-blender_version_min = "2.83.20"
-
+blender_version_min = "4.2.0"
 
 tagline = "Bring your Blender animations to life in Minecraft"
 description = "A tool that converts your Blender animations directly into playable Minecraft datapacks"
@@ -16,8 +16,7 @@ description = "A tool that converts your Blender animations directly into playab
 license = ["SPDX:GPL-3.0-or-later"]
 tags = ["Import-Export", "Animation"]
 
+website = "https://priqnot.gumroad.com/l/mc-animaker"
 
 [permissions]
-files = "Import Resource Pack from disk and export Minecraft Datapack files to disk"
-
-website = "https://priqnot.gumroad.com/l/mc-animaker"
+files = "Import Resource Packs and Export Minecraft Datapack Files"
