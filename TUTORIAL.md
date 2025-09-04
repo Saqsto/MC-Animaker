@@ -1,6 +1,6 @@
 # MC Animaker Tutorial
 
-Welcome to the official tutorial for MC Animaker! This guide will walk you through the entire process of creating incredible Minecraft animations and models, from initial setup to exporting your final datapack.
+Welcome to the official tutorial for MC Animaker! This guide will walk you through the entire process of creating a Minecraft animation, from initial setup to exporting your final datapack.
 
 ## Table of Contents
 1.  [Installation](#1-installation)
